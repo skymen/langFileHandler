@@ -1232,13 +1232,12 @@ function renderTable() {
         
         const keyContext = state.context[key];
         if (keyContext) {
+            keyCell.dataset.context = keyContext;
             keyCell.innerHTML = `
                 <span class="key-text">${escapeHtml(key)}</span>
-                <span class="context-indicator" data-context="${escapeHtml(keyContext)}">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"/>
-                        <line x1="12" y1="16" x2="12" y2="12"/>
-                        <line x1="12" y1="8" x2="12.01" y2="8"/>
+                <span class="context-indicator">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
                     </svg>
                 </span>`;
         } else {
@@ -1816,9 +1815,9 @@ function initEventListeners() {
     
     // Table click handlers (delegation)
     elements.tableBody.addEventListener('click', (e) => {
-        // Check for key cell click (to edit context)
+        // Check for key cell or context indicator click (to edit context)
         const keyCell = e.target.closest('.key-cell');
-        if (keyCell && !e.target.closest('.context-indicator')) {
+        if (keyCell) {
             const row = keyCell.closest('tr');
             if (row && row.dataset.key) {
                 openContextModal(row.dataset.key);
@@ -1881,26 +1880,38 @@ function initEventListeners() {
         }
     });
     
-    // Context tooltip handlers (delegation)
+    // Context tooltip handlers (delegation) - show on key cell hover, follow mouse
     const contextTooltip = document.getElementById('context-tooltip');
     const contextTooltipText = document.getElementById('context-tooltip-text');
+    let activeContextCell = null;
     
     document.addEventListener('mouseover', (e) => {
-        const indicator = e.target.closest('.context-indicator');
-        if (indicator && indicator.dataset.context) {
-            contextTooltipText.textContent = indicator.dataset.context;
-            
-            const rect = indicator.getBoundingClientRect();
-            contextTooltip.style.left = rect.left + 'px';
-            contextTooltip.style.top = (rect.bottom + 8) + 'px';
+        const keyCell = e.target.closest('.key-cell');
+        if (keyCell && keyCell.dataset.context) {
+            activeContextCell = keyCell;
+            contextTooltipText.textContent = keyCell.dataset.context;
+            contextTooltip.style.left = (e.clientX + 12) + 'px';
+            contextTooltip.style.top = (e.clientY + 12) + 'px';
             contextTooltip.classList.add('visible');
         }
     });
     
+    document.addEventListener('mousemove', (e) => {
+        if (activeContextCell && contextTooltip.classList.contains('visible')) {
+            contextTooltip.style.left = (e.clientX + 12) + 'px';
+            contextTooltip.style.top = (e.clientY + 12) + 'px';
+        }
+    });
+    
     document.addEventListener('mouseout', (e) => {
-        const indicator = e.target.closest('.context-indicator');
-        if (indicator) {
-            contextTooltip.classList.remove('visible');
+        const keyCell = e.target.closest('.key-cell');
+        if (keyCell && keyCell.dataset.context) {
+            // Only hide if we're actually leaving the key cell
+            const relatedTarget = e.relatedTarget;
+            if (!keyCell.contains(relatedTarget)) {
+                contextTooltip.classList.remove('visible');
+                activeContextCell = null;
+            }
         }
     });
     
