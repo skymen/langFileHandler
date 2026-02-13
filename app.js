@@ -1122,17 +1122,40 @@ function renderTable() {
             const value = state.translations[key][lang];
             const comments = getComments(key, lang);
             const hasComments = comments.length > 0;
-            const commentIndicator = hasComments 
-                ? `<span class="comment-indicator" title="${comments.length} comment(s)">💬</span>` 
-                : '';
+            
+            // Build comment indicator with tooltip showing last comment
+            let commentIndicatorHtml = '';
+            if (hasComments) {
+                const lastComment = comments[comments.length - 1];
+                // Extract just the text part (remove timestamp if present)
+                const lastCommentText = lastComment.replace(/^\[[^\]]+\]\s*/, '');
+                const truncatedComment = lastCommentText.length > 100 
+                    ? lastCommentText.substring(0, 100) + '...' 
+                    : lastCommentText;
+                commentIndicatorHtml = `
+                    <span class="comment-indicator">${comments.length}
+                        <span class="comment-tooltip">
+                            <span class="comment-tooltip-label">Latest comment:</span>
+                            ${escapeHtml(truncatedComment)}
+                        </span>
+                    </span>`;
+            }
             
             if (value === null || value === undefined) {
-                valueCell.innerHTML = `<span class="value-content value-missing" data-key="${escapeHtml(key)}" data-lang="${escapeHtml(lang)}">Missing ${commentIndicator}</span>`;
+                valueCell.innerHTML = `
+                    <div class="value-cell-wrapper">
+                        <span class="value-content value-missing" data-key="${escapeHtml(key)}" data-lang="${escapeHtml(lang)}">Missing</span>
+                        ${commentIndicatorHtml}
+                    </div>`;
             } else {
                 const displayValue = String(value).length > 100 
                     ? String(value).substring(0, 100) + '...' 
                     : String(value);
-                valueCell.innerHTML = `<span class="value-content" data-key="${escapeHtml(key)}" data-lang="${escapeHtml(lang)}">${escapeHtml(displayValue)} ${commentIndicator}</span>`;
+                valueCell.innerHTML = `
+                    <div class="value-cell-wrapper">
+                        <span class="value-content" data-key="${escapeHtml(key)}" data-lang="${escapeHtml(lang)}">${escapeHtml(displayValue)}</span>
+                        ${commentIndicatorHtml}
+                    </div>`;
             }
             
             row.appendChild(valueCell);

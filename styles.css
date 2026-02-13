@@ -269,12 +269,18 @@ body {
 /* Toolbar */
 .toolbar {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
+    flex-direction: column;
+    gap: 12px;
     padding: 12px 16px;
     background: var(--color-bg-secondary);
     border-radius: var(--radius-md);
+}
+
+.toolbar-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
     flex-wrap: wrap;
 }
 
@@ -282,7 +288,21 @@ body {
 .toolbar-right {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.toolbar-divider {
+    width: 1px;
+    height: 24px;
+    background: var(--color-border);
+    margin: 0 4px;
+}
+
+.stats-display {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
 }
 
 .search-box {
@@ -404,9 +424,17 @@ body {
 .value-cell {
     max-width: 300px;
     min-width: 150px;
+    position: relative;
+}
+
+.value-cell-wrapper {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
 }
 
 .value-content {
+    flex: 1;
     display: block;
     max-height: 80px;
     overflow: hidden;
@@ -448,9 +476,58 @@ body {
 
 /* Comment Indicator */
 .comment-indicator {
-    margin-left: 4px;
-    font-size: 0.75rem;
-    opacity: 0.8;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 28px;
+    height: 22px;
+    padding: 0 6px;
+    background: var(--color-ai);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    cursor: help;
+    position: relative;
+}
+
+.comment-indicator::before {
+    content: '💬';
+    margin-right: 3px;
+    font-size: 0.65rem;
+}
+
+.comment-indicator:hover .comment-tooltip {
+    display: block;
+}
+
+.comment-tooltip {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 4px;
+    padding: 8px 12px;
+    background: var(--color-bg-tertiary);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    font-size: 0.8rem;
+    font-weight: normal;
+    color: var(--color-text);
+    white-space: pre-wrap;
+    max-width: 300px;
+    min-width: 200px;
+    z-index: 100;
+    box-shadow: var(--shadow-md);
+    text-align: left;
+}
+
+.comment-tooltip-label {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    margin-bottom: 4px;
+    display: block;
 }
 
 /* Comments List */
@@ -528,28 +605,6 @@ body {
     font-size: 0.75rem;
     color: var(--color-text-muted);
     font-weight: normal;
-}
-
-/* Footer Actions */
-.footer-actions {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 16px;
-    background: var(--color-bg-secondary);
-    border-radius: var(--radius-md);
-    flex-wrap: wrap;
-    gap: 12px;
-}
-
-.footer-left {
-    color: var(--color-text-secondary);
-    font-size: 0.9rem;
-}
-
-.footer-right {
-    display: flex;
-    gap: 12px;
 }
 
 /* Modals */
