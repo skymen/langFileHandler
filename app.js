@@ -1129,14 +1129,18 @@ function renderTable() {
                 const lastComment = comments[comments.length - 1];
                 // Extract just the text part (remove timestamp if present)
                 const lastCommentText = lastComment.replace(/^\[[^\]]+\]\s*/, '');
-                const truncatedComment = lastCommentText.length > 100 
-                    ? lastCommentText.substring(0, 100) + '...' 
+                const truncatedComment = lastCommentText.length > 150 
+                    ? lastCommentText.substring(0, 150) + '...' 
                     : lastCommentText;
                 commentIndicatorHtml = `
-                    <span class="comment-indicator">${comments.length}
+                    <span class="comment-indicator">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                        </svg>
+                        ${comments.length}
                         <span class="comment-tooltip">
                             <span class="comment-tooltip-label">Latest comment:</span>
-                            ${escapeHtml(truncatedComment)}
+                            <span class="comment-tooltip-text">${escapeHtml(truncatedComment)}</span>
                         </span>
                     </span>`;
             }
@@ -1686,6 +1690,39 @@ function initEventListeners() {
         if (state.hasUnsavedChanges) {
             e.preventDefault();
             e.returnValue = '';
+        }
+    });
+    
+    // Sticky toolbar with scroll-up reveal
+    let lastScrollY = 0;
+    let ticking = false;
+    const toolbar = document.getElementById('toolbar');
+    
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            window.requestAnimationFrame(() => {
+                const currentScrollY = window.scrollY;
+                
+                if (toolbar) {
+                    // Add shadow when scrolled
+                    if (currentScrollY > 10) {
+                        toolbar.classList.add('toolbar-shadow');
+                    } else {
+                        toolbar.classList.remove('toolbar-shadow');
+                    }
+                    
+                    // Hide on scroll down, show on scroll up
+                    if (currentScrollY > lastScrollY && currentScrollY > 100) {
+                        toolbar.classList.add('toolbar-hidden');
+                    } else {
+                        toolbar.classList.remove('toolbar-hidden');
+                    }
+                }
+                
+                lastScrollY = currentScrollY;
+                ticking = false;
+            });
+            ticking = true;
         }
     });
 }
