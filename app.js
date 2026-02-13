@@ -16,6 +16,7 @@ const state = {
     commentFileHandles: {}, // { "en": FileHandle for en.comments.json }
     aiOnline: false,
     searchQuery: '',
+    sortBy: 'name-asc',    // Current sort option
     validationResults: [],
     hasUnsavedChanges: false
 };
@@ -46,6 +47,7 @@ const elements = {
     btnAddLanguage: document.getElementById('btn-add-language'),
     btnValidateAll: document.getElementById('btn-validate-all'),
     searchInput: document.getElementById('search-input'),
+    sortSelect: document.getElementById('sort-select'),
     
     // Table
     tableHeader: document.getElementById('table-header'),
@@ -1026,6 +1028,64 @@ function renderTableHeader() {
 }
 
 /**
+ * Get the number of missing translations for a key
+ */
+function getMissingCount(key) {
+    let count = 0;
+    for (const lang of state.languages) {
+        if (state.translations[key][lang] === null || state.translations[key][lang] === undefined) {
+            count++;
+        }
+    }
+    return count;
+}
+
+/**
+ * Get the total number of comments for a key (across all languages)
+ */
+function getTotalCommentCount(key) {
+    let count = 0;
+    const keyComments = state.comments[key];
+    if (keyComments) {
+        for (const lang of Object.keys(keyComments)) {
+            count += keyComments[lang].length;
+        }
+    }
+    return count;
+}
+
+/**
+ * Sort keys based on current sort option
+ */
+function sortKeys(keys) {
+    const [sortField, sortDirection] = state.sortBy.split('-');
+    const multiplier = sortDirection === 'asc' ? 1 : -1;
+    
+    return keys.sort((a, b) => {
+        switch (sortField) {
+            case 'name':
+                return multiplier * a.localeCompare(b);
+            case 'missing':
+                const missingA = getMissingCount(a);
+                const missingB = getMissingCount(b);
+                if (missingA !== missingB) {
+                    return multiplier * (missingA - missingB);
+                }
+                return a.localeCompare(b); // Secondary sort by name
+            case 'comments':
+                const commentsA = getTotalCommentCount(a);
+                const commentsB = getTotalCommentCount(b);
+                if (commentsA !== commentsB) {
+                    return multiplier * (commentsA - commentsB);
+                }
+                return a.localeCompare(b); // Secondary sort by name
+            default:
+                return a.localeCompare(b);
+        }
+    });
+}
+
+/**
  * Render table body
  */
 function renderTable() {
@@ -1033,13 +1093,17 @@ function renderTable() {
     elements.tableBody.innerHTML = '';
     
     const searchQuery = state.searchQuery.toLowerCase();
-    const sortedKeys = Object.keys(state.translations).sort();
+    let keys = Object.keys(state.translations);
+    
+    // Filter by search first
+    if (searchQuery) {
+        keys = keys.filter(key => key.toLowerCase().includes(searchQuery));
+    }
+    
+    // Then sort
+    const sortedKeys = sortKeys(keys);
     
     for (const key of sortedKeys) {
-        // Filter by search
-        if (searchQuery && !key.toLowerCase().includes(searchQuery)) {
-            continue;
-        }
         
         const row = document.createElement('tr');
         row.dataset.key = key;
@@ -1464,6 +1528,12 @@ function initEventListeners() {
     // Search
     elements.searchInput.addEventListener('input', (e) => {
         state.searchQuery = e.target.value;
+        renderTable();
+    });
+    
+    // Sort
+    elements.sortSelect.addEventListener('change', (e) => {
+        state.sortBy = e.target.value;
         renderTable();
     });
     

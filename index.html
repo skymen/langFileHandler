@@ -80,6 +80,17 @@
                     </button>
                 </div>
                 <div class="toolbar-right">
+                    <div class="sort-box">
+                        <label for="sort-select">Sort by:</label>
+                        <select id="sort-select">
+                            <option value="name-asc">Name (A-Z)</option>
+                            <option value="name-desc">Name (Z-A)</option>
+                            <option value="missing-desc">Missing (most first)</option>
+                            <option value="missing-asc">Missing (least first)</option>
+                            <option value="comments-desc">Comments (most first)</option>
+                            <option value="comments-asc">Comments (least first)</option>
+                        </select>
+                    </div>
                     <div class="search-box">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <circle cx="11" cy="11" r="8"/>
