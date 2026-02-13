@@ -11,9 +11,11 @@ const state = {
     languages: [],
     translations: {},
     comments: {},          // { "key.path": { "en": ["comment1", "comment2"], "es": ["comment1"] } }
+    context: {},           // { "key.path": "Context description for this key" }
     directoryHandle: null,
     fileHandles: {},
     commentFileHandles: {}, // { "en": FileHandle for en.comments.json }
+    contextFileHandle: null, // FileHandle for context.json
     aiOnline: false,
     searchQuery: '',
     sortBy: 'name-asc',    // Current sort option
@@ -63,6 +65,7 @@ const elements = {
     modalAddKey: document.getElementById('modal-add-key'),
     modalAddLanguage: document.getElementById('modal-add-language'),
     modalEditValue: document.getElementById('modal-edit-value'),
+    modalEditContext: document.getElementById('modal-edit-context'),
     modalValidate: document.getElementById('modal-validate'),
     modalValidateSingle: document.getElementById('modal-validate-single'),
     modalValidationResults: document.getElementById('modal-validation-results'),
@@ -75,6 +78,10 @@ const elements = {
     editLanguageLabel: document.getElementById('edit-language-label'),
     editValueInput: document.getElementById('edit-value-input'),
     editValueRemove: document.getElementById('edit-value-remove'),
+    
+    // Context Modal
+    contextKeyLabel: document.getElementById('context-key-label'),
+    contextInput: document.getElementById('context-input'),
     
     // Validation Modal (Bulk)
     sourceLanguagesCheckboxes: document.getElementById('source-languages-checkboxes'),
@@ -371,11 +378,17 @@ async function translateKey(key) {
             .map(([lang, value]) => `- ${lang}: "${value}"`)
             .join('\n');
         
+        // Include context if available
+        const keyContext = state.context[key];
+        const contextSection = keyContext 
+            ? `\nContext for this text: ${keyContext}\n` 
+            : '';
+        
         const prompt = `You are a translation assistant. Translate the following text to the specified languages.
 Maintain the same tone, formatting (including placeholders like {0}, [b], [icon=...], etc.).
 
 Key: ${key}
-
+${contextSection}
 Existing translations (use as context):
 ${existingList}
 
@@ -464,9 +477,16 @@ async function validateTranslations(sourceLanguages, validateLanguages, keys) {
                     .map(([lang, value]) => `- ${lang}: "${value}"`)
                     .join('\n');
                 
+                // Include context if available
+                const keyContext = state.context[key];
+                const contextSection = keyContext 
+                    ? `\nContext for this text: ${keyContext}\n` 
+                    : '';
+                
                 const prompt = `You are a translation validator. Check if the translations are correct based on the source translations.
 
 Key: ${key}
+${contextSection}
 Source translations (these are correct):
 ${sourceList}
 
@@ -605,9 +625,16 @@ async function executeSingleKeyValidation() {
             .map(lang => `- ${lang}: "${keyData[lang]}"`)
             .join('\n');
         
+        // Include context if available
+        const keyContext = state.context[key];
+        const contextSection = keyContext 
+            ? `\nContext for this text: ${keyContext}\n` 
+            : '';
+        
         const prompt = `You are a translation validator. Check if the translations are correct based on the source translations.
 
 Key: ${key}
+${contextSection}
 Source translations (these are correct):
 ${sourceList}
 
@@ -661,12 +688,15 @@ Respond ONLY with valid JSON:
  * Parse language files and merge into state
  */
 function parseAndMergeFiles(files) {
-    // Separate comment files from translation files
+    // Separate different file types
     const translationFiles = [];
     const commentFiles = [];
+    let contextFile = null;
     
     for (const file of files) {
-        if (file.name.endsWith('.comments.json')) {
+        if (file.name === 'context.json') {
+            contextFile = file;
+        } else if (file.name.endsWith('.comments.json')) {
             commentFiles.push(file);
         } else if (file.name.endsWith('.json')) {
             translationFiles.push(file);
@@ -747,6 +777,28 @@ function parseAndMergeFiles(files) {
         } catch (error) {
             console.error(`Error parsing ${name}:`, error);
             showToast(`Error parsing ${name}: ${error.message}`, 'error');
+        }
+    }
+    
+    // Process context file
+    if (contextFile) {
+        try {
+            const data = JSON.parse(contextFile.content);
+            const flattened = flattenObject(data);
+            
+            if (contextFile.handle) {
+                state.contextFileHandle = contextFile.handle;
+            }
+            
+            // Merge context - data structure: { "key.path": "Context description" }
+            for (const [key, context] of Object.entries(flattened)) {
+                if (typeof context === 'string') {
+                    state.context[key] = context;
+                }
+            }
+        } catch (error) {
+            console.error('Error parsing context.json:', error);
+            showToast('Error parsing context.json: ' + error.message, 'error');
         }
     }
 }
@@ -888,6 +940,9 @@ async function saveToFolder() {
         // Save comment files
         await saveCommentFiles();
         
+        // Save context file
+        await saveContextFile();
+        
         state.hasUnsavedChanges = false;
         showToast('All files saved successfully', 'success');
     } catch (error) {
@@ -940,6 +995,32 @@ async function saveCommentFiles() {
 }
 
 /**
+ * Save context file to folder
+ */
+async function saveContextFile() {
+    if (!state.directoryHandle) return;
+    
+    // Only save if there is context
+    if (Object.keys(state.context).length === 0) return;
+    
+    // Unflatten context to nested structure
+    const nested = unflattenObject(state.context);
+    const content = JSON.stringify(nested, null, '\t');
+    
+    // Get or create context file handle
+    let fileHandle = state.contextFileHandle;
+    if (!fileHandle) {
+        fileHandle = await state.directoryHandle.getFileHandle('context.json', { create: true });
+        state.contextFileHandle = fileHandle;
+    }
+    
+    // Write file
+    const writable = await fileHandle.createWritable();
+    await writable.write(content);
+    await writable.close();
+}
+
+/**
  * Download all files as ZIP
  */
 async function downloadZip() {
@@ -968,6 +1049,12 @@ async function downloadZip() {
             if (Object.keys(commentData).length > 0) {
                 zip.file(`${lang}.comments.json`, JSON.stringify(commentData, null, '\t'));
             }
+        }
+        
+        // Add context file if there is context
+        if (Object.keys(state.context).length > 0) {
+            const nestedContext = unflattenObject(state.context);
+            zip.file('context.json', JSON.stringify(nestedContext, null, '\t'));
         }
         
         const blob = await zip.generateAsync({ type: 'blob' });
@@ -1142,7 +1229,21 @@ function renderTable() {
         // Key cell
         const keyCell = document.createElement('td');
         keyCell.className = 'key-cell';
-        keyCell.textContent = key;
+        
+        const keyContext = state.context[key];
+        if (keyContext) {
+            keyCell.innerHTML = `
+                <span class="key-text">${escapeHtml(key)}</span>
+                <span class="context-indicator" data-context="${escapeHtml(keyContext)}">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="16" x2="12" y2="12"/>
+                        <line x1="12" y1="8" x2="12.01" y2="8"/>
+                    </svg>
+                </span>`;
+        } else {
+            keyCell.textContent = key;
+        }
         row.appendChild(keyCell);
         
         // Value cells for each language
@@ -1501,6 +1602,55 @@ function addCommentFromModal() {
 }
 
 /**
+ * Open context edit modal
+ */
+function openContextModal(key) {
+    currentEditContext = { key, lang: null };
+    
+    elements.contextKeyLabel.textContent = key;
+    elements.contextInput.value = state.context[key] || '';
+    
+    openModal(elements.modalEditContext);
+    elements.contextInput.focus();
+}
+
+/**
+ * Save context from modal
+ */
+function saveContext() {
+    const { key } = currentEditContext;
+    const contextText = elements.contextInput.value.trim();
+    
+    if (contextText) {
+        state.context[key] = contextText;
+    } else {
+        delete state.context[key];
+    }
+    
+    state.hasUnsavedChanges = true;
+    closeModal(elements.modalEditContext);
+    renderTable();
+    showToast('Context updated', 'success');
+}
+
+/**
+ * Remove context from modal
+ */
+function removeContext() {
+    const { key } = currentEditContext;
+    
+    if (state.context[key]) {
+        delete state.context[key];
+        state.hasUnsavedChanges = true;
+        closeModal(elements.modalEditContext);
+        renderTable();
+        showToast('Context removed', 'success');
+    } else {
+        showToast('No context to remove', 'info');
+    }
+}
+
+/**
  * Save edited value
  */
 function saveEditedValue() {
@@ -1608,6 +1758,8 @@ function initEventListeners() {
     document.getElementById('btn-confirm-edit-value').addEventListener('click', saveEditedValue);
     document.getElementById('btn-apply-suggestions').addEventListener('click', applyAllSuggestions);
     document.getElementById('btn-add-comment').addEventListener('click', addCommentFromModal);
+    document.getElementById('btn-save-context').addEventListener('click', saveContext);
+    document.getElementById('btn-remove-context').addEventListener('click', removeContext);
     
     // Allow Enter key to add comment
     elements.editNewComment.addEventListener('keypress', (e) => {
@@ -1664,6 +1816,16 @@ function initEventListeners() {
     
     // Table click handlers (delegation)
     elements.tableBody.addEventListener('click', (e) => {
+        // Check for key cell click (to edit context)
+        const keyCell = e.target.closest('.key-cell');
+        if (keyCell && !e.target.closest('.context-indicator')) {
+            const row = keyCell.closest('tr');
+            if (row && row.dataset.key) {
+                openContextModal(row.dataset.key);
+                return;
+            }
+        }
+        
         const target = e.target.closest('[data-key]');
         if (!target) return;
         
@@ -1716,6 +1878,29 @@ function initEventListeners() {
         const indicator = e.target.closest('.comment-indicator');
         if (indicator) {
             commentTooltip.classList.remove('visible');
+        }
+    });
+    
+    // Context tooltip handlers (delegation)
+    const contextTooltip = document.getElementById('context-tooltip');
+    const contextTooltipText = document.getElementById('context-tooltip-text');
+    
+    document.addEventListener('mouseover', (e) => {
+        const indicator = e.target.closest('.context-indicator');
+        if (indicator && indicator.dataset.context) {
+            contextTooltipText.textContent = indicator.dataset.context;
+            
+            const rect = indicator.getBoundingClientRect();
+            contextTooltip.style.left = rect.left + 'px';
+            contextTooltip.style.top = (rect.bottom + 8) + 'px';
+            contextTooltip.classList.add('visible');
+        }
+    });
+    
+    document.addEventListener('mouseout', (e) => {
+        const indicator = e.target.closest('.context-indicator');
+        if (indicator) {
+            contextTooltip.classList.remove('visible');
         }
     });
     

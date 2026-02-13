@@ -70,6 +70,32 @@ Example (`en.json`):
 
 Keys are displayed in dot-notation: `strings.ui.menu`, `strings.achievements.tutorialHeader`, etc.
 
+## Context File
+
+You can provide context for translation keys by creating a `context.json` file. This context helps AI produce more accurate translations by understanding the purpose or usage of each string.
+
+Example (`context.json`):
+```json
+{
+  "strings": {
+    "welcomeMessage": "Shown on the home screen when the user first opens the app",
+    "ui": {
+      "menu": "Main navigation button label",
+      "play": "Button to start the game",
+      "settings": "Button to open settings panel"
+    },
+    "achievements": {
+      "tutorialHeader": "Achievement title for completing the tutorial",
+      "tutorialDescription": "Achievement description shown below the title"
+    }
+  }
+}
+```
+
+- Context is displayed when hovering over the info icon (ℹ) next to keys that have context
+- Context is automatically included in AI translation and validation prompts
+- The file uses the same nested structure as language files
+
 ## Comment Files
 
 Comments are stored in separate files named `{lang}.comments.json`. For example, comments for English translations are stored in `en.comments.json`.

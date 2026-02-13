@@ -163,6 +163,40 @@
         <span class="comment-tooltip-text" id="comment-tooltip-text"></span>
     </div>
 
+    <!-- Global Context Tooltip -->
+    <div class="context-tooltip" id="context-tooltip">
+        <span class="context-tooltip-label">Context:</span>
+        <span class="context-tooltip-text" id="context-tooltip-text"></span>
+    </div>
+
+    <!-- Modal: Edit Context -->
+    <div class="modal-overlay hidden" id="modal-edit-context">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Edit Context</h2>
+                <button class="modal-close" data-close-modal>&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Key</label>
+                    <div class="key-display" id="context-key-label"></div>
+                </div>
+                <div class="form-group">
+                    <label for="context-input">Context</label>
+                    <textarea id="context-input" rows="4" placeholder="Describe the purpose or usage of this string to help with translation..."></textarea>
+                    <span class="form-hint">This context will be shown to AI when translating or validating</span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" id="btn-remove-context">Remove Context</button>
+                <div class="modal-footer-right">
+                    <button class="btn btn-secondary" data-close-modal>Cancel</button>
+                    <button class="btn btn-primary" id="btn-save-context">Save Context</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal: Add Key -->
     <div class="modal-overlay hidden" id="modal-add-key">
         <div class="modal">

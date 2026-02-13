@@ -474,6 +474,74 @@ body {
     width: 250px;
     overflow: hidden;
     text-overflow: ellipsis;
+    cursor: pointer;
+    transition: background var(--transition);
+}
+
+.key-cell:hover {
+    background: var(--color-bg-tertiary);
+}
+
+.key-text {
+    display: inline;
+}
+
+/* Context Indicator */
+.context-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 6px;
+    color: var(--color-text-muted);
+    opacity: 0.6;
+    cursor: help;
+    vertical-align: middle;
+    transition: opacity var(--transition);
+}
+
+.context-indicator:hover {
+    opacity: 1;
+    color: var(--color-ai);
+}
+
+.context-indicator svg {
+    width: 14px;
+    height: 14px;
+}
+
+/* Global Context Tooltip */
+.context-tooltip {
+    display: none;
+    position: fixed;
+    padding: 8px 12px;
+    background: var(--color-bg-tertiary);
+    border: 1px solid var(--color-ai);
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    font-weight: normal;
+    color: var(--color-text);
+    max-width: 400px;
+    z-index: 1000;
+    box-shadow: var(--shadow-md);
+    text-align: left;
+    pointer-events: none;
+}
+
+.context-tooltip.visible {
+    display: block;
+}
+
+.context-tooltip-label {
+    font-size: 0.7rem;
+    color: var(--color-ai);
+    margin-bottom: 4px;
+    display: block;
+    font-weight: 600;
+}
+
+.context-tooltip-text {
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
 /* Value Cell */
@@ -734,6 +802,22 @@ body {
     gap: 12px;
     padding: 16px 24px;
     border-top: 1px solid var(--color-border);
+}
+
+.modal-footer-right {
+    display: flex;
+    gap: 12px;
+    margin-left: auto;
+}
+
+.key-display {
+    font-family: 'Monaco', 'Menlo', monospace;
+    font-size: 0.9rem;
+    color: var(--color-primary);
+    background: var(--color-bg-tertiary);
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    word-break: break-all;
 }
 
 /* Form Elements */
