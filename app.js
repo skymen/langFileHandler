@@ -1560,24 +1560,83 @@ function renderEditComments(key, lang) {
     const comments = getComments(key, lang);
     elements.editCommentsList.innerHTML = '';
     
-    for (const comment of comments) {
+    comments.forEach((comment, index) => {
         const item = document.createElement('div');
         item.className = 'comment-item';
         
         // Parse timestamp from comment if present
         const timestampMatch = comment.match(/^\[([^\]]+)\]\s*/);
+        let contentHtml;
         if (timestampMatch) {
             const timestamp = timestampMatch[1];
             const text = comment.replace(timestampMatch[0], '');
-            item.innerHTML = `
-                <span class="comment-timestamp">${escapeHtml(timestamp)}</span>
-                <span class="comment-text">${escapeHtml(text)}</span>
+            contentHtml = `
+                <div class="comment-content">
+                    <span class="comment-timestamp">${escapeHtml(timestamp)}</span>
+                    <span class="comment-text">${escapeHtml(text)}</span>
+                </div>
             `;
         } else {
-            item.innerHTML = `<span class="comment-text">${escapeHtml(comment)}</span>`;
+            contentHtml = `
+                <div class="comment-content">
+                    <span class="comment-text">${escapeHtml(comment)}</span>
+                </div>
+            `;
         }
         
+        item.innerHTML = `
+            ${contentHtml}
+            <button class="comment-delete" data-index="${index}" title="Delete comment">&times;</button>
+        `;
+        
         elements.editCommentsList.appendChild(item);
+    });
+}
+
+/**
+ * Delete a single comment by index
+ */
+function deleteComment(index) {
+    const { key, lang } = currentEditContext;
+    
+    if (state.comments[key] && state.comments[key][lang]) {
+        state.comments[key][lang].splice(index, 1);
+        
+        // Clean up empty arrays/objects
+        if (state.comments[key][lang].length === 0) {
+            delete state.comments[key][lang];
+        }
+        if (Object.keys(state.comments[key]).length === 0) {
+            delete state.comments[key];
+        }
+        
+        state.hasUnsavedChanges = true;
+        renderEditComments(key, lang);
+        renderTable();
+        showToast('Comment deleted', 'success');
+    }
+}
+
+/**
+ * Clear all comments for the current key/language
+ */
+function clearAllComments() {
+    const { key, lang } = currentEditContext;
+    
+    if (state.comments[key] && state.comments[key][lang] && state.comments[key][lang].length > 0) {
+        delete state.comments[key][lang];
+        
+        // Clean up empty objects
+        if (Object.keys(state.comments[key]).length === 0) {
+            delete state.comments[key];
+        }
+        
+        state.hasUnsavedChanges = true;
+        renderEditComments(key, lang);
+        renderTable();
+        showToast('All comments cleared', 'success');
+    } else {
+        showToast('No comments to clear', 'info');
     }
 }
 
@@ -1757,8 +1816,18 @@ function initEventListeners() {
     document.getElementById('btn-confirm-edit-value').addEventListener('click', saveEditedValue);
     document.getElementById('btn-apply-suggestions').addEventListener('click', applyAllSuggestions);
     document.getElementById('btn-add-comment').addEventListener('click', addCommentFromModal);
+    document.getElementById('btn-clear-comments').addEventListener('click', clearAllComments);
     document.getElementById('btn-save-context').addEventListener('click', saveContext);
     document.getElementById('btn-remove-context').addEventListener('click', removeContext);
+    
+    // Comment delete buttons (delegation)
+    elements.editCommentsList.addEventListener('click', (e) => {
+        const deleteBtn = e.target.closest('.comment-delete');
+        if (deleteBtn) {
+            const index = parseInt(deleteBtn.dataset.index, 10);
+            deleteComment(index);
+        }
+    });
     
     // Allow Enter key to add comment
     elements.editNewComment.addEventListener('keypress', (e) => {
