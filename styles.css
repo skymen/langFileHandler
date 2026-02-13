@@ -381,7 +381,9 @@ body {
 .table-header-row {
     display: table;
     width: 100%;
+    max-width: 100%;
     table-layout: fixed;
+    box-sizing: border-box;
     background: var(--color-bg-tertiary);
     border: 1px solid var(--color-border);
     border-top: none;
@@ -427,15 +429,16 @@ body {
 /* Translation Table */
 .translation-table {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
+    max-width: 100%;
+    border-collapse: collapse;
     font-size: 0.9rem;
     table-layout: fixed;
+    box-sizing: border-box;
 }
 
 .translation-table th,
 .translation-table td {
-    padding: 12px 16px;
+    padding: 6px 10px;
     text-align: left;
     border-bottom: 1px solid var(--color-border);
 }
@@ -1042,11 +1045,6 @@ body {
 
     .translation-table {
         font-size: 0.8rem;
-    }
-
-    .translation-table th,
-    .translation-table td {
-        padding: 8px 10px;
     }
 }
 
