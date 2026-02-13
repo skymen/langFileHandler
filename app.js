@@ -1154,7 +1154,7 @@ function renderTable() {
             const comments = getComments(key, lang);
             const hasComments = comments.length > 0;
             
-            // Build comment indicator with tooltip showing last comment
+            // Build comment indicator with data attribute for tooltip
             let commentIndicatorHtml = '';
             if (hasComments) {
                 const lastComment = comments[comments.length - 1];
@@ -1164,15 +1164,11 @@ function renderTable() {
                     ? lastCommentText.substring(0, 150) + '...' 
                     : lastCommentText;
                 commentIndicatorHtml = `
-                    <span class="comment-indicator">
+                    <span class="comment-indicator" data-tooltip="${escapeHtml(truncatedComment)}">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                         </svg>
                         ${comments.length}
-                        <span class="comment-tooltip">
-                            <span class="comment-tooltip-label">Latest comment:</span>
-                            <span class="comment-tooltip-text">${escapeHtml(truncatedComment)}</span>
-                        </span>
                     </span>`;
             }
             
@@ -1696,6 +1692,30 @@ function initEventListeners() {
         if (target.classList.contains('btn-validate-key')) {
             openSingleKeyValidationModal(key);
             return;
+        }
+    });
+    
+    // Comment tooltip handlers (delegation)
+    const commentTooltip = document.getElementById('comment-tooltip');
+    const commentTooltipText = document.getElementById('comment-tooltip-text');
+    
+    document.addEventListener('mouseover', (e) => {
+        const indicator = e.target.closest('.comment-indicator');
+        if (indicator && indicator.dataset.tooltip) {
+            commentTooltipText.textContent = indicator.dataset.tooltip;
+            
+            const rect = indicator.getBoundingClientRect();
+            commentTooltip.style.left = rect.left + 'px';
+            commentTooltip.style.top = (rect.top - 8) + 'px';
+            commentTooltip.style.transform = 'translateY(-100%)';
+            commentTooltip.classList.add('visible');
+        }
+    });
+    
+    document.addEventListener('mouseout', (e) => {
+        const indicator = e.target.closest('.comment-indicator');
+        if (indicator) {
+            commentTooltip.classList.remove('visible');
         }
     });
     
