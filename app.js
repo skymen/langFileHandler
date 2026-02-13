@@ -1264,7 +1264,7 @@ function renderTable() {
                     ? lastCommentText.substring(0, 150) + '...' 
                     : lastCommentText;
                 commentIndicatorHtml = `
-                    <span class="comment-indicator" data-tooltip="${escapeHtml(truncatedComment)}">
+                    <span class="comment-indicator btn-open-dialog" data-key="${escapeHtml(key)}" data-lang="${escapeHtml(lang)}" data-tooltip="${escapeHtml(truncatedComment)}">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                         </svg>
@@ -1272,22 +1272,31 @@ function renderTable() {
                     </span>`;
             }
             
-            if (value === null || value === undefined) {
-                valueCell.innerHTML = `
-                    <div class="value-cell-wrapper">
-                        <span class="value-content value-missing" data-key="${escapeHtml(key)}" data-lang="${escapeHtml(lang)}">Missing</span>
-                        ${commentIndicatorHtml}
-                    </div>`;
-            } else {
-                const displayValue = String(value).length > 100 
-                    ? String(value).substring(0, 100) + '...' 
-                    : String(value);
-                valueCell.innerHTML = `
-                    <div class="value-cell-wrapper">
-                        <span class="value-content" data-key="${escapeHtml(key)}" data-lang="${escapeHtml(lang)}">${escapeHtml(displayValue)}</span>
-                        ${commentIndicatorHtml}
-                    </div>`;
-            }
+            // Build the cell actions (expand button + comment indicator)
+            const cellActionsHtml = `
+                <div class="value-cell-actions">
+                    <button class="btn-expand-dialog btn-open-dialog" data-key="${escapeHtml(key)}" data-lang="${escapeHtml(lang)}" title="Open full editor">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+                        </svg>
+                    </button>
+                    ${commentIndicatorHtml}
+                </div>`;
+            
+            const actualValue = value !== null && value !== undefined ? String(value) : '';
+            const isMissing = value === null || value === undefined;
+            
+            valueCell.innerHTML = `
+                <div class="value-cell-wrapper">
+                    <input type="text" 
+                        class="value-inline-input ${isMissing ? 'value-missing' : ''}" 
+                        data-key="${escapeHtml(key)}" 
+                        data-lang="${escapeHtml(lang)}"
+                        value="${escapeHtml(actualValue)}"
+                        placeholder="${isMissing ? 'Missing' : ''}"
+                    >
+                    ${cellActionsHtml}
+                </div>`;
             
             row.appendChild(valueCell);
         }
@@ -1926,8 +1935,8 @@ function initEventListeners() {
         const key = target.dataset.key;
         const lang = target.dataset.lang;
         
-        // Value cell click
-        if (target.classList.contains('value-content')) {
+        // Open dialog button (expand or comment indicator)
+        if (target.classList.contains('btn-open-dialog')) {
             openEditModal(key, lang);
             return;
         }
@@ -1956,6 +1965,43 @@ function initEventListeners() {
             return;
         }
     });
+    
+    // Inline input change handler (delegation)
+    elements.tableBody.addEventListener('change', (e) => {
+        if (e.target.classList.contains('value-inline-input')) {
+            const key = e.target.dataset.key;
+            const lang = e.target.dataset.lang;
+            const newValue = e.target.value.trim();
+            
+            if (newValue === '') {
+                state.translations[key][lang] = null;
+                e.target.classList.add('value-missing');
+                e.target.placeholder = 'Missing';
+            } else {
+                state.translations[key][lang] = newValue;
+                e.target.classList.remove('value-missing');
+                e.target.placeholder = '';
+            }
+            
+            state.hasUnsavedChanges = true;
+        }
+    });
+    
+    // Update input styling on focus/blur for missing values
+    elements.tableBody.addEventListener('focus', (e) => {
+        if (e.target.classList.contains('value-inline-input') && e.target.classList.contains('value-missing')) {
+            e.target.placeholder = '';
+        }
+    }, true);
+    
+    elements.tableBody.addEventListener('blur', (e) => {
+        if (e.target.classList.contains('value-inline-input')) {
+            if (e.target.value.trim() === '') {
+                e.target.classList.add('value-missing');
+                e.target.placeholder = 'Missing';
+            }
+        }
+    }, true);
     
     // Comment tooltip handlers (delegation)
     const commentTooltip = document.getElementById('comment-tooltip');

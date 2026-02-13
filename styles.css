@@ -545,13 +545,76 @@ body {
 /* Value Cell */
 .value-cell {
     position: relative;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .value-cell-wrapper {
     display: flex;
     flex-direction: column;
     gap: 4px;
+}
+
+/* Inline Edit Input */
+.value-inline-input {
+    width: 100%;
+    padding: 4px 8px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    color: var(--color-text);
+    font-size: 0.9rem;
+    font-family: inherit;
+    transition: border-color var(--transition), background var(--transition);
+}
+
+.value-inline-input:hover {
+    background: var(--color-bg-tertiary);
+}
+
+.value-inline-input:focus {
+    outline: none;
+    background: var(--color-bg-tertiary);
+    border-color: var(--color-primary);
+}
+
+.value-inline-input.value-missing {
+    color: var(--color-missing);
+    font-style: italic;
+}
+
+.value-inline-input.value-missing::placeholder {
+    color: var(--color-missing);
+    opacity: 0.8;
+}
+
+/* Value Cell Actions */
+.value-cell-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-expand-dialog {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+    background: transparent;
+    border: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    opacity: 0.5;
+    transition: opacity var(--transition), color var(--transition);
+}
+
+.btn-expand-dialog:hover {
+    opacity: 1;
+    color: var(--color-primary);
+}
+
+.btn-expand-dialog svg {
+    width: 12px;
+    height: 12px;
 }
 
 .value-content {
@@ -605,13 +668,14 @@ body {
     color: var(--color-text-muted);
     font-size: 0.65rem;
     border-radius: var(--radius-sm);
-    cursor: help;
+    cursor: pointer;
     opacity: 0.6;
-    transition: opacity var(--transition);
+    transition: opacity var(--transition), color var(--transition);
 }
 
 .comment-indicator:hover {
     opacity: 1;
+    color: var(--color-primary);
 }
 
 .comment-indicator svg {
