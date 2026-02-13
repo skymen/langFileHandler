@@ -53,79 +53,89 @@
 
         <!-- Main Editor Section (hidden until files loaded) -->
         <section class="editor-section hidden" id="editor-section">
-            <!-- Toolbar -->
-            <div class="toolbar" id="toolbar">
-                <div class="toolbar-left">
-                    <button class="btn btn-primary" id="btn-add-key">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="12" y1="5" x2="12" y2="19"/>
-                            <line x1="5" y1="12" x2="19" y2="12"/>
-                        </svg>
-                        Add Key
-                    </button>
-                    <button class="btn btn-secondary" id="btn-add-language">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"/>
-                            <line x1="2" y1="12" x2="22" y2="12"/>
-                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-                        </svg>
-                        Add Language
-                    </button>
-                    <button class="btn btn-ai" id="btn-validate-all" disabled>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                            <polyline points="22 4 12 14.01 9 11.01"/>
-                        </svg>
-                        Validate
-                    </button>
-                    <button class="btn btn-secondary" id="btn-load-more">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                            <polyline points="17 8 12 3 7 8"/>
-                            <line x1="12" y1="3" x2="12" y2="15"/>
-                        </svg>
-                        Load More
-                    </button>
-                    <div class="toolbar-divider"></div>
-                    <span id="stats-display" class="stats-display">0 keys, 0 languages</span>
-                </div>
-                <div class="toolbar-center">
-                    <div class="sort-box">
-                        <label for="sort-select">Sort:</label>
-                        <select id="sort-select">
-                            <option value="name-asc">Name (A-Z)</option>
-                            <option value="name-desc">Name (Z-A)</option>
-                            <option value="missing-desc">Missing (most)</option>
-                            <option value="missing-asc">Missing (least)</option>
-                            <option value="comments-desc">Comments (most)</option>
-                            <option value="comments-asc">Comments (least)</option>
-                        </select>
+            <!-- Sticky Header (Toolbar + Table Header) -->
+            <div class="sticky-header" id="sticky-header">
+                <!-- Toolbar -->
+                <div class="toolbar" id="toolbar">
+                    <div class="toolbar-left">
+                        <button class="btn btn-primary" id="btn-add-key">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="12" y1="5" x2="12" y2="19"/>
+                                <line x1="5" y1="12" x2="19" y2="12"/>
+                            </svg>
+                            Add Key
+                        </button>
+                        <button class="btn btn-secondary" id="btn-add-language">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="2" y1="12" x2="22" y2="12"/>
+                                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                            </svg>
+                            Add Language
+                        </button>
+                        <button class="btn btn-ai" id="btn-validate-all" disabled>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                <polyline points="22 4 12 14.01 9 11.01"/>
+                            </svg>
+                            Validate
+                        </button>
+                        <button class="btn btn-secondary" id="btn-load-more">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                            Load More
+                        </button>
+                        <div class="toolbar-divider"></div>
+                        <span id="stats-display" class="stats-display">0 keys, 0 languages</span>
                     </div>
-                    <div class="search-box">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="11" cy="11" r="8"/>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                        </svg>
-                        <input type="text" id="search-input" placeholder="Search keys...">
+                    <div class="toolbar-center">
+                        <div class="sort-box">
+                            <label for="sort-select">Sort:</label>
+                            <select id="sort-select">
+                                <option value="name-asc">Name (A-Z)</option>
+                                <option value="name-desc">Name (Z-A)</option>
+                                <option value="missing-desc">Missing (most)</option>
+                                <option value="missing-asc">Missing (least)</option>
+                                <option value="comments-desc">Comments (most)</option>
+                                <option value="comments-asc">Comments (least)</option>
+                            </select>
+                        </div>
+                        <div class="search-box">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"/>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                            </svg>
+                            <input type="text" id="search-input" placeholder="Search keys...">
+                        </div>
+                    </div>
+                    <div class="toolbar-right">
+                        <button class="btn btn-primary" id="btn-save" disabled>
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                                <polyline points="17 21 17 13 7 13 7 21"/>
+                                <polyline points="7 3 7 8 15 8"/>
+                            </svg>
+                            Save
+                        </button>
+                        <button class="btn btn-secondary" id="btn-download-zip">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                            ZIP
+                        </button>
                     </div>
                 </div>
-                <div class="toolbar-right">
-                    <button class="btn btn-primary" id="btn-save" disabled>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                            <polyline points="17 21 17 13 7 13 7 21"/>
-                            <polyline points="7 3 7 8 15 8"/>
-                        </svg>
-                        Save
-                    </button>
-                    <button class="btn btn-secondary" id="btn-download-zip">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                            <polyline points="7 10 12 15 17 10"/>
-                            <line x1="12" y1="15" x2="12" y2="3"/>
-                        </svg>
-                        ZIP
-                    </button>
+
+                <!-- Table Header -->
+                <div class="table-header-row" id="sticky-table-header">
+                    <div class="header-cell header-key">Key</div>
+                    <!-- Language columns added dynamically -->
+                    <div class="header-cell header-actions">Actions</div>
                 </div>
             </div>
 

@@ -143,6 +143,19 @@ function getAllCommentsForKey(key) {
 }
 
 /**
+ * Sort languages array: EN first, then alphabetically
+ */
+function sortLanguages() {
+    state.languages.sort((a, b) => {
+        // EN always comes first
+        if (a.toLowerCase() === 'en') return -1;
+        if (b.toLowerCase() === 'en') return 1;
+        // Then alphabetical
+        return a.toLowerCase().localeCompare(b.toLowerCase());
+    });
+}
+
+/**
  * Flatten nested object to dot-notation keys
  */
 function flattenObject(obj, prefix = '') {
@@ -708,6 +721,9 @@ function parseAndMergeFiles(files) {
         }
     }
     
+    // Sort languages: EN first, then alphabetically
+    sortLanguages();
+    
     // Process comment files
     for (const { name, content, handle } of commentFiles) {
         const langCode = name.replace('.comments.json', '');
@@ -1001,29 +1017,44 @@ function updateStats() {
  * Render table header
  */
 function renderTableHeader() {
-    // Clear existing language columns
+    // Clear existing language columns from both headers
     const existingLangCols = elements.tableHeader.querySelectorAll('.col-lang');
     existingLangCols.forEach(col => col.remove());
     
+    const stickyHeader = document.getElementById('sticky-table-header');
+    const existingStickyLangCols = stickyHeader.querySelectorAll('.header-lang');
+    existingStickyLangCols.forEach(col => col.remove());
+    
     // Add language columns before actions column
     const actionsCol = elements.tableHeader.querySelector('.col-actions');
+    const stickyActionsCol = stickyHeader.querySelector('.header-actions');
     
     for (const lang of state.languages) {
-        const th = document.createElement('th');
-        th.className = 'col-lang';
-        
         // Count non-null values for this language
         const count = Object.values(state.translations).filter(v => v[lang] !== null && v[lang] !== undefined).length;
         const total = Object.keys(state.translations).length;
         
+        // Add to actual table header (hidden but keeps structure)
+        const th = document.createElement('th');
+        th.className = 'col-lang';
         th.innerHTML = `
             <div class="lang-header">
                 <span class="lang-code">${escapeHtml(lang)}</span>
                 <span class="lang-count">${count}/${total}</span>
             </div>
         `;
-        
         elements.tableHeader.insertBefore(th, actionsCol);
+        
+        // Add to sticky header
+        const stickyCell = document.createElement('div');
+        stickyCell.className = 'header-cell header-lang';
+        stickyCell.innerHTML = `
+            <div class="lang-header">
+                <span class="lang-code">${escapeHtml(lang)}</span>
+                <span class="lang-count">${count}/${total}</span>
+            </div>
+        `;
+        stickyHeader.insertBefore(stickyCell, stickyActionsCol);
     }
 }
 
@@ -1388,6 +1419,9 @@ function addLanguage() {
     // Add language
     state.languages.push(langCode);
     
+    // Sort languages: EN first, then alphabetically
+    sortLanguages();
+    
     // Add null values for all existing keys
     for (const key of Object.keys(state.translations)) {
         state.translations[key][langCode] = null;
@@ -1693,33 +1727,24 @@ function initEventListeners() {
         }
     });
     
-    // Sticky toolbar with scroll-up reveal
-    let lastScrollY = 0;
+    // Sticky header shadow on scroll
     let ticking = false;
-    const toolbar = document.getElementById('toolbar');
+    const stickyHeader = document.getElementById('sticky-header');
     
     window.addEventListener('scroll', () => {
         if (!ticking) {
             window.requestAnimationFrame(() => {
                 const currentScrollY = window.scrollY;
                 
-                if (toolbar) {
+                if (stickyHeader) {
                     // Add shadow when scrolled
                     if (currentScrollY > 10) {
-                        toolbar.classList.add('toolbar-shadow');
+                        stickyHeader.classList.add('sticky-shadow');
                     } else {
-                        toolbar.classList.remove('toolbar-shadow');
-                    }
-                    
-                    // Hide on scroll down, show on scroll up
-                    if (currentScrollY > lastScrollY && currentScrollY > 100) {
-                        toolbar.classList.add('toolbar-hidden');
-                    } else {
-                        toolbar.classList.remove('toolbar-hidden');
+                        stickyHeader.classList.remove('sticky-shadow');
                     }
                 }
                 
-                lastScrollY = currentScrollY;
                 ticking = false;
             });
             ticking = true;
