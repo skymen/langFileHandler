@@ -1301,6 +1301,9 @@ function renderTable() {
             state.translations[key][lang] === null || state.translations[key][lang] === undefined
         );
         
+        // Check if there are any comments for this key
+        const hasComments = state.comments[key] && Object.keys(state.comments[key]).length > 0;
+        
         actionsCell.innerHTML = `
             <button class="btn btn-icon btn-sm btn-translate" data-key="${escapeHtml(key)}" title="AI Translate Missing" ${!state.aiOnline || !hasMissing ? 'disabled' : ''}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1313,6 +1316,13 @@ function renderTable() {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                     <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+            </button>
+            <button class="btn btn-icon btn-sm btn-clear-comments" data-key="${escapeHtml(key)}" title="Clear All Comments" ${!hasComments ? 'disabled' : ''}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    <line x1="9" y1="7" x2="15" y2="13"/>
+                    <line x1="15" y1="7" x2="9" y2="13"/>
                 </svg>
             </button>
             <button class="btn btn-icon btn-sm btn-delete" data-key="${escapeHtml(key)}" title="Delete Key">
@@ -1634,7 +1644,23 @@ function clearAllComments() {
         state.hasUnsavedChanges = true;
         renderEditComments(key, lang);
         renderTable();
-        showToast('All comments cleared', 'success');
+        showToast('Comments cleared', 'success');
+    } else {
+        showToast('No comments to clear', 'info');
+    }
+}
+
+/**
+ * Clear all comments for all languages of a key
+ */
+function clearAllKeyComments(key) {
+    if (state.comments[key] && Object.keys(state.comments[key]).length > 0) {
+        const langCount = Object.keys(state.comments[key]).length;
+        delete state.comments[key];
+        
+        state.hasUnsavedChanges = true;
+        renderTable();
+        showToast(`Comments cleared for all ${langCount} languages`, 'success');
     } else {
         showToast('No comments to clear', 'info');
     }
@@ -1921,6 +1947,12 @@ function initEventListeners() {
         // Validate single key button
         if (target.classList.contains('btn-validate-key')) {
             openSingleKeyValidationModal(key);
+            return;
+        }
+        
+        // Clear all comments button
+        if (target.classList.contains('btn-clear-comments')) {
+            clearAllKeyComments(key);
             return;
         }
     });

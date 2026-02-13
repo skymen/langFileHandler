@@ -196,7 +196,7 @@ body {
 }
 
 .btn-icon {
-    padding: 8px;
+    padding: 4px;
     background: transparent;
     color: var(--color-text-secondary);
 }
@@ -409,7 +409,7 @@ body {
 
 
 .table-header-row .header-actions {
-    width: 120px;
+    width: 150px;
     text-align: center;
 }
 
@@ -460,7 +460,7 @@ body {
 }
 
 .col-actions {
-    width: 120px;
+    width: 150px;
     text-align: center !important;
 }
 
@@ -744,7 +744,7 @@ body {
 
 /* Actions Cell */
 .actions-cell {
-    width: 120px;
+    width: 150px;
     text-align: center;
     white-space: nowrap;
 }
